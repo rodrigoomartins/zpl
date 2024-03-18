@@ -1,8 +1,6 @@
 import streamlit as st
 import requests
 import shutil
-import pyperclip
-import time
 
 altura = 19 #milimetros
 largura = 73 #milimetros
