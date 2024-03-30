@@ -22,7 +22,7 @@ with st.sidebar:
 
     if layout_etiquetas == "Personalizado":
         largura = st.number_input("Largura da etiqueta:",1,500,73)
-        altura = st.number_input("Altura da etiqueta:",1,500,19)
+        altura = st.number_input("Altura da etiqueta:",1,500,20)
     
     st.divider()
     dpi = st.number_input("Dpmm:",1,1000,8)
@@ -54,7 +54,7 @@ def converter_imagem_zpl(imagem):
         return None
 
 def remover_parametros_zpl(codigo_zpl):
-    pos_inicio = codigo_zpl.find("^GFA")
+    pos_inicio = codigo_zpl.find(f"^GFA")
     pos_fim = codigo_zpl.rfind("^XZ")
     return codigo_zpl[pos_inicio:pos_fim]
 
@@ -106,7 +106,7 @@ with col001:
             posicao_campo3_y = st.slider(posicao_y_texto,0,100,round(25*percent_y), key="posicao_campo3_y")
             posicao_campo3_y = ajustar_valor_y(posicao_campo3_y)
     with st.expander("Campo 4"):
-        input_campo4 = st.text_input("campo4", placeholder="Digite a descrição do campo 4...", max_chars=9,key="input_campo4")
+        input_campo4 = st.text_input("campo4", placeholder="Digite a descrição do campo 4...", max_chars=50,key="input_campo4")
         col1_campo4, col2_campo4, col3_campo4 = st.columns(3)
         with col1_campo4:
             tamanho_campo4 = st.slider("Tamanho",0,100,40, key = "tamanho_campo4")
@@ -204,7 +204,9 @@ with col001:
     ^FO{posicao_tamanho_x+5},{posicao_tamanho_y+18}^AN,18,18^FDTAM^FS""")
     if not input_barcode:
         barcode = ("")
-    else:
+    elif tipo_barcode == 'EAN-13':
+        barcode = (f"^BY{tamanho_barcode}^FO{posicao_barcode_x},{posicao_barcode_y}^BEN,60,Y,N^FD{input_barcode}^FS")
+    elif tipo_barcode == 'Code 128 (sem dígito verificador)':
         barcode = (f"^BY{tamanho_barcode}^FO{posicao_barcode_x},{posicao_barcode_y}^BCN,60,Y,N,N,A^FD{input_barcode}^FS")
     epc = (f"^FO{posicao_epc_x},{posicao_epc_y}^A0N,{tamanho_epc},{tamanho_epc}^FD{input_epc}^FS")
 
@@ -215,12 +217,14 @@ with col001:
         codigo_zpl_imagem = remover_parametros_zpl(codigo_zpl_imagem)
         if codigo_zpl_imagem is not None:
             st.success("Imagem convertida com sucesso!",icon="✅")
-            col25, col26 = st.columns(2)
+            col24, col25, col26 = st.columns(3)
+            with col24:
+                tamanho_imagem = st.slider("Tamanho",-100,100,0,key="tamanho_imagem")
             with col25:
-                posicao_imagem_x = st.slider(posicao_x_texto,0,100,0)
+                posicao_imagem_x = st.slider(posicao_x_texto,0,100,0,key="posicao_imagem_x")
                 posicao_imagem_x = ajustar_valor_x(posicao_imagem_x)
             with col26:
-                posicao_imagem_y = st.slider(posicao_y_texto,0,100,0)
+                posicao_imagem_y = st.slider(posicao_y_texto,0,100,0,key="posicao_imagem_y")
                 posicao_imagem_y = ajustar_valor_y(posicao_imagem_y)
             codigo_zpl_imagem = (f"^FO{posicao_imagem_x},{posicao_imagem_y}^FRD{codigo_zpl_imagem}")
         else:
