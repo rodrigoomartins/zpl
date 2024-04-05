@@ -4,6 +4,7 @@ import shutil
 
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
+
 with st.sidebar:
     st.subheader("Configurações da etiqueta")
     layout_etiquetas = st.selectbox(
@@ -26,6 +27,7 @@ with st.sidebar:
     
     st.divider()
     dpi = st.number_input("Dpmm:",1,1000,8)
+
     
 
 dpi_y = altura*dpi
@@ -67,9 +69,13 @@ def limpar_tudo():
     st.session_state['input_tamanho'] = ""
     st.session_state['input_barcode'] = ""
     st.session_state['input_epc'] = ""
+    st.session_state['habilitar_logo_rfid'] = False
+    st.session_state['habilitar_qrcode'] = False
+    st.session_state['habilitar_caracteres_especiais'] = False
 
 st.title("ZPL Edit")
 st.text("Entradas personalizadas")
+
 col001, col002 = st.columns([0.6,0.4])
 with col001:
     with st.expander("Campo 1"):
@@ -106,7 +112,7 @@ with col001:
             posicao_campo3_y = st.slider(posicao_y_texto,0,100,round(25*percent_y), key="posicao_campo3_y")
             posicao_campo3_y = ajustar_valor_y(posicao_campo3_y)
     with st.expander("Campo 4"):
-        input_campo4 = st.text_input("campo4", placeholder="Digite a descrição do campo 4...", max_chars=50,key="input_campo4")
+        input_campo4 = st.text_input("Descrição", placeholder="Digite a descrição do campo 4...", max_chars=50,key="input_campo4")
         col1_campo4, col2_campo4, col3_campo4 = st.columns(3)
         with col1_campo4:
             tamanho_campo4 = st.slider("Tamanho",0,100,40, key = "tamanho_campo4")
@@ -117,7 +123,7 @@ with col001:
             posicao_campo4_y = st.slider(posicao_y_texto,0,100,round(60*percent_y), key="posicao_campo4_y")
             posicao_campo4_y = ajustar_valor_y(posicao_campo4_y)
     with st.expander("Campo 5"):
-        input_campo5 = st.text_input("campo5:", placeholder="Digite uma mensagem...",max_chars=50,key="input_campo5")
+        input_campo5 = st.text_input("Descrição:", placeholder="Digite uma mensagem...",max_chars=50,key="input_campo5")
         col1_campo5, col2_campo5, col3_campo5 = st.columns(3)
         with col1_campo5:
             tamanho_campo5 = st.slider("Tamanho",0,100,15, key = "tamanho_campo5")
@@ -146,70 +152,131 @@ with col001:
             ('EAN-13', 'Code 128 (sem dígito verificador)')
         )
         input_barcode = st.text_input("Código de barras:", placeholder="Digite o código de barras...",max_chars=13,key="input_barcode")
-        col1_barcode, col2_barcode, col3_barcode = st.columns(3)
+        col1_barcode, col2_barcode, col3_barcode, col4_barcode = st.columns(4)
         with col1_barcode:
-            tamanho_barcode = st.slider("Tamanho",1,10,key="tamanho_barcode")
+            altura_barcode = st.slider("Altura",1,500,50,key="altura_barcode")
         with col2_barcode:
+            largura_barcode = st.slider("Largura",1,10,key="largura_barcode")
+        with col3_barcode:
             posicao_barcode_x = st.slider(posicao_x_texto,0,100,round(370*percent_x),key="posicao_barcode_x")
             posicao_barcode_x = ajustar_valor_x(posicao_barcode_x)
-        with col3_barcode:
+        with col4_barcode:
             posicao_barcode_y = st.slider(posicao_y_texto,0,100,round(40*percent_y),key="posicao_barcode_y")
             posicao_barcode_y = ajustar_valor_y(posicao_barcode_y)
     with st.expander("EPC"):
         input_epc = st.text_input(label="EPC:", placeholder="Digite o EPC...", max_chars=24,key="input_epc")
-        col1_epc, col2_epc, col3_epc = st.columns(3)
+        col1_epc, col2_epc, col3_epc, col4_epc = st.columns(4)
         with col1_epc:
-            tamanho_epc = st.slider("Tamanho",0,100,18, key = "tamanho_epc")
+            altura_epc = st.number_input("Altura",0,10000,1, key="altura_epc")
         with col2_epc:
+            largura_epc = st.number_input("Largura",0,10000,1, key = "largura_epc")
+        with col3_epc:
             posicao_epc_x = st.slider(posicao_x_texto,0,100,round(15*percent_x), key="posicao_epc_x")
             posicao_epc_x = ajustar_valor_x(posicao_epc_x)
-        with col3_epc:
-            posicao_epc_y = st.slider(posicao_y_texto,0,100,round(130*percent_y), key="posicao_epc_y")
+        with col4_epc:
+            posicao_epc_y = st.slider(posicao_y_texto,0,100,round(80*percent_y), key="posicao_epc_y")
             posicao_epc_y = ajustar_valor_y(posicao_epc_y)
+        st.caption("Ajustes de altura e largura de fonte dependem da escalabilidade disponível.")
+    with st.expander ("Logo RFID"):
+        habilitar_logo_rfid = st.toggle("Habilitar logo",value=False,key="habilitar_logo_rfid")
+        col1_logo_rfid, col2_logo_rfid = st.columns(2)
+        if not habilitar_logo_rfid:
+            with col1_logo_rfid:
+                posicao_logo_rfid_x = st.slider(posicao_x_texto,0,100,50,disabled=True,key="posicao_logo_rfid_x")
+            with col2_logo_rfid:
+                posicao_logo_rfid_y = st.slider(posicao_y_texto,0,100,50,disabled=True,key="posicao_logo_rfid_y")
+            logo_rfid = ""
+        if habilitar_logo_rfid:
+            with col1_logo_rfid:
+                posicao_logo_rfid_x = st.slider(posicao_x_texto,0,100,50,key="posicao_logo_rfid_x")
+                posicao_logo_rfid_x = ajustar_valor_x(posicao_logo_rfid_x)
+            with col2_logo_rfid:
+                posicao_logo_rfid_y = st.slider(posicao_y_texto,0,100,50,key="posicao_logo_rfid_y")
+                posicao_logo_rfid_y = ajustar_valor_y(posicao_logo_rfid_y)
+            logo_rfid = (f"""^FO{posicao_logo_rfid_x},{posicao_logo_rfid_y}^GB20,3,3^FS
+^FO{posicao_logo_rfid_x},{posicao_logo_rfid_y}^GB3,40,3^FS
+^FO{posicao_logo_rfid_x},{posicao_logo_rfid_y+40}^GB40,3,3^FS
+^FO{posicao_logo_rfid_x+40},{posicao_logo_rfid_y+25.5}^GB3,17,3^FS
+^FO{posicao_logo_rfid_x+5},{posicao_logo_rfid_y+25}^A0N,14,17^FDRFID^FS
+^FO{posicao_logo_rfid_x+25},{posicao_logo_rfid_y-4}^GC25,25,B^FS
+^FO{posicao_logo_rfid_x+23},{posicao_logo_rfid_y-2}^GC25,25,W^FS
+^FO{posicao_logo_rfid_x+28},{posicao_logo_rfid_y+3}^GC15,15,B^FS
+^FO{posicao_logo_rfid_x+26},{posicao_logo_rfid_y+5}^GC15,15,W^FS
+^FO{posicao_logo_rfid_x+30},{posicao_logo_rfid_y+10}^GC6,5,B^FS""")
+        
+    with st.expander("QRCode"):
+        habilitar_qrcode = st.toggle("QRCode", value=False, key="habilitar_qrcode")
+        if not habilitar_qrcode:
+            qrcode_zpl = ""
+        if habilitar_qrcode:
+            opcao_1 = st.radio("",("EPC","Barcode"))
+            if opcao_1 == "EPC":
+                conteudo_qrcode = input_epc
+            elif opcao_1 == "Barcode":
+                conteudo_qrcode = input_barcode
+            col43, col44, col45 = st.columns(3)
+            with col43:
+                tamanho_qrcode = st.slider("Tamanho",0,10,3,key="tamanho_qrcode")
+            with col44:
+                posicao_qrcode_x = st.slider(posicao_x_texto,0,100,key="posicao_qrcode_x")
+                posicao_qrcode_x = ajustar_valor_x(posicao_qrcode_x)
+            with col45:
+                posicao_qrcode_y = st.slider(posicao_y_texto,0,100,round(10*percent_y),key="posicao_qrcode_y")
+                posicao_qrcode_y = ajustar_valor_y(posicao_qrcode_y)
+            qrcode_zpl = (f"""^FO{posicao_qrcode_x},{posicao_qrcode_y}^BQN,2,{tamanho_qrcode},Q,7^FDQR,{conteudo_qrcode}^FS
+        ^XZ""")
+    with st.expander("Caracteres especiais"):
+        habilitar_caracteres_especiais = st.toggle("Caracteres especiais",key="habilitar_caracteres_especiais")
+        if not habilitar_caracteres_especiais:
+            codificacao_caracteres = ""
+        else:
+            input_codificacao_caracteres = st.number_input("Codificação:",0,255,28,key="codificacao_caracteres")
+            codificacao_caracteres = (f"^CI{input_codificacao_caracteres}")
+            st.text(f"""Mais utilizados:
+27 = Zebra Code Page 1252
+28 = Unicode (UTF-8 encoding) - Unicode Character Set""")
+            st.link_button("Consultar documentação","https://www.zebra.com/content/dam/zebra_new_ia/en-us/manuals/printers/common/programming/zpl-zbi2-pm-en-pg.pdf")
+
     limpar = st.button("Limpar entradas", on_click=limpar_tudo)
-    
-    habilitar_qrcode = st.toggle("QRCode")
-    if not habilitar_qrcode:
-        qrcode_zpl = ""
-    if habilitar_qrcode:
-        opcao_1 = st.radio("",("EPC","Barcode"))
-        if opcao_1 == "EPC":
-            conteudo_qrcode = input_epc
-        elif opcao_1 == "Barcode":
-            conteudo_qrcode = input_barcode
-        col43, col44, col45 = st.columns(3)
-        with col43:
-            tamanho_qrcode = st.slider("Tamanho",0,10,3,key="tamanho_qrcode")
-        with col44:
-            posicao_qrcode_x = st.slider(posicao_x_texto,0,100,key="posicao_qrcode_x")
-            posicao_qrcode_x = ajustar_valor_x(posicao_qrcode_x)
-        with col45:
-            posicao_qrcode_y = st.slider(posicao_y_texto,0,100,round(10*percent_y),key="posicao_qrcode_y")
-            posicao_qrcode_y = ajustar_valor_y(posicao_qrcode_y)
-        qrcode_zpl = (f"""^FO{posicao_qrcode_x},{posicao_qrcode_y}^BQN,2,{tamanho_qrcode},Q,7^FDQR,{conteudo_qrcode}^FS
-    ^XZ""")
-    
         
 
-    campo1 = (f"^FO{posicao_campo1_x},{posicao_campo1_y},^A0N,{tamanho_campo1}^FD{input_campo1}^FS")
-    campo2 = (f"^FO{posicao_campo2_x},{posicao_campo2_y}^A0N,{tamanho_campo2},{tamanho_campo2}^FD{input_campo2}^FS")
-    campo3 = (f"^FO{posicao_campo3_x},{posicao_campo3_y}^A0N,{tamanho_campo3},{tamanho_campo3}^FD{input_campo3}^FS")
-    campo4 = (f"^FO{posicao_campo4_x},{posicao_campo4_y}^A0N,{tamanho_campo4},{tamanho_campo4}^FD{input_campo4}^FS")
-    campo5 = (f"^FO{posicao_campo5_x},{posicao_campo5_y}^A0N,{tamanho_campo5},{tamanho_campo5}^FD{input_campo5}^FS")
+    if not input_campo1:
+        campo1 = ""
+    else:
+        campo1 = (f"^FO{posicao_campo1_x},{posicao_campo1_y},^A0N,{tamanho_campo1}^FD{input_campo1}^FS")
+    if not input_campo2:
+        campo2 = ""
+    else:
+        campo2 = (f"^FO{posicao_campo2_x},{posicao_campo2_y}^A0N,{tamanho_campo2},{tamanho_campo2}^FD{input_campo2}^FS")
+    if not input_campo3:
+        campo3 = ""
+    else:
+        campo3 = (f"^FO{posicao_campo3_x},{posicao_campo3_y}^A0N,{tamanho_campo3},{tamanho_campo3}^FD{input_campo3}^FS")
+    if not input_campo4:
+        campo4=""
+    else:
+        campo4 = (f"^FO{posicao_campo4_x},{posicao_campo4_y}^A0N,{tamanho_campo4},{tamanho_campo4}^FD{input_campo4}^FS")
+    if not input_campo5:
+        campo5=""
+    else:
+        campo5 = (f"^FO{posicao_campo5_x},{posicao_campo5_y}^A0N,{tamanho_campo5},{tamanho_campo5}^FD{input_campo5}^FS")
     if not input_tamanho:
         tamanho = ("")
     else:
-        tamanho = (f"""^FO{posicao_tamanho_x},{posicao_tamanho_y}^GB120,50,2^FS
-    ^FO{posicao_tamanho_x+55},{posicao_tamanho_y+6}^ASN^FD{input_tamanho}^FS
-    ^FO{posicao_tamanho_x+5},{posicao_tamanho_y+18}^AN,18,18^FDTAM^FS""")
+        tamanho = (f"""^FO{posicao_tamanho_x},{posicao_tamanho_y}^GB{((tamanho_tamanho/100)+1)*115},{((tamanho_tamanho/100)+1)*50},2^FS
+^FO{posicao_tamanho_x+55},{posicao_tamanho_y+10}^A0N,{((tamanho_tamanho/100)+1)*38},{((tamanho_tamanho/100)+1)*33}^FD{input_tamanho}^FS
+^FO{posicao_tamanho_x+5},{posicao_tamanho_y+18}^AN,18,18^FDTAM:^FS""")
     if not input_barcode:
         barcode = ("")
     elif tipo_barcode == 'EAN-13':
-        barcode = (f"^BY{tamanho_barcode}^FO{posicao_barcode_x},{posicao_barcode_y}^BEN,60,Y,N^FD{input_barcode}^FS")
+        barcode = (f"^BY{largura_barcode}^FO{posicao_barcode_x},{posicao_barcode_y}^BEN,{altura_barcode},Y,N^FD{input_barcode}^FS")
     elif tipo_barcode == 'Code 128 (sem dígito verificador)':
-        barcode = (f"^BY{tamanho_barcode}^FO{posicao_barcode_x},{posicao_barcode_y}^BCN,60,Y,N,N,A^FD{input_barcode}^FS")
-    epc = (f"^FO{posicao_epc_x},{posicao_epc_y}^A0N,{tamanho_epc},{tamanho_epc}^FD{input_epc}^FS")
-
+        barcode = (f"^BY{largura_barcode}^FO{posicao_barcode_x},{posicao_barcode_y}^BCN,{altura_barcode},Y,N,N,A^FD{input_barcode}^FS")
+    if not input_epc:
+        epc = ""
+    else:
+        epc = (f"^FO{posicao_epc_x},{posicao_epc_y}^ADN,{altura_epc},{largura_epc}^FD{input_epc}^FS")
+    
     codigo_zpl_imagem = ""
     imagem_file = st.file_uploader("Adicione uma imagem (PNG):", type=['png'])
     if imagem_file is not None:
@@ -233,22 +300,45 @@ with col001:
 
 
 zpl  = f"""
-    ^XA
-    ^CI28
-    ^RFW,H^FD{input_epc}^FS
+^XA
+{codificacao_caracteres}
+^RFW,H^FD{input_epc}^FS
 
-    {campo1}
-    {campo2}
-    {campo3}
-    {campo4}
-    {campo5}    
-    {tamanho}    
-    {barcode}
-    {epc}
-    {qrcode_zpl}
-    {codigo_zpl_imagem}
-    ^XZ
-    """
+^FX Campo 1
+{campo1}
+
+^FX Campo 2
+{campo2}
+
+^FX Campo 3
+{campo3}
+
+^FX Campo 4
+{campo4}
+
+^FX Campo 5
+{campo5}
+
+^FX Tamanho
+{tamanho}
+
+^FX Código de barras
+{barcode}
+
+^FX EPC
+{epc}
+
+^FX Logo RFID
+{logo_rfid}
+
+^FX QRCode
+{qrcode_zpl}
+
+^FX Imagem
+{codigo_zpl_imagem}
+
+^XZ
+"""
 
 url = f'http://api.labelary.com/v1/printers/8dpmm/labels/{largura / 25.4}x{altura / 25.4}/0/'
 files = {'file' : zpl}
@@ -266,16 +356,14 @@ with col002:
     with st.expander("ZPL"):
         st.code(zpl)
         st.divider()
-        st.text("Preview")
-        st.caption(f"{largura} x {altura} (mm)")
-        st.image('label.png')
-        col34, col35 = st.columns(2)
-        with col34:
-            with open("label.png", "rb") as file:
-                st.download_button(
-                    label="Download",
-                    data=file,
-                    file_name="label.png",
-                    mime="image/png",
-                    type='primary'
-                )
+    st.text("Preview")
+    st.caption(f"{largura} x {altura} (mm)")
+    st.image('label.png')
+    with open("label.png", "rb") as file:
+        st.download_button(
+            label="Download",
+            data=file,
+            file_name="label.png",
+            mime="image/png",
+            type='primary'
+        )
